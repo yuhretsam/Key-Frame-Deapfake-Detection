@@ -1,0 +1,30 @@
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+.venv/
+venv/
+env/
+.env
+.idea/
+.vscode/
+
+# Data and outputs
+data/
+datasets/
+outputs/
+checkpoints/
+logs/
+*.zip
+
+# Jupyter notebooks and notebooks folder
+*.ipynb
+notebook/
+
+# OS
+Thumbs.db
+Desktop.ini
