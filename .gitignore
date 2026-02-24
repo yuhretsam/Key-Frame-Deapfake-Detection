@@ -14,7 +14,7 @@ env/
 .vscode/
 
 # Data and outputs
-data/
+
 datasets/
 outputs/
 checkpoints/
