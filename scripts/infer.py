@@ -8,8 +8,8 @@ import torch
 from PIL import Image
 from torchvision import transforms
 
-from src.data.kmeans_keyframes import KMeansKeyframeExtractor
-from src.data.optical_flow_keyframes import OpticalFlowKeyframeExtractor
+from src.data_preprocessing.kmeans_keyframes import KMeansKeyframeExtractor
+from src.data_preprocessing.optical_flow_keyframes import OpticalFlowKeyframeExtractor
 from src.models.cnn_lstm import CnnLstm
 from src.utils.io import ensure_dir
 

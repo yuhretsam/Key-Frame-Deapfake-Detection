@@ -14,10 +14,10 @@ trains CNN + LSTM models on the extracted keyframes.
 ```
 .
 ├── src/
-│   ├── data/
+│   ├── data_preprocessing/
 │   │   ├── kmeans_keyframes.py
 │   │   ├── optical_flow_keyframes.py
-│   │   └── dataset.py
+│   │   └── keyframe_dataset.py
 │   ├── models/
 │   │   └── cnn_lstm.py
 │   ├── training/
@@ -38,6 +38,9 @@ trains CNN + LSTM models on the extracted keyframes.
 `src/utils/io.py` contains small filesystem helpers used across scripts:
 - `list_video_files()` to collect video files from a folder
 - `ensure_dir()` to create output directories safely
+
+`src/data_preprocessing/` contains keyframe extraction logic and dataset loading
+utilities for training.
 
 ## Installation
 ```bash

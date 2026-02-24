@@ -3,7 +3,7 @@ import os
 
 from tqdm import tqdm
 
-from src.data.optical_flow_keyframes import OpticalFlowKeyframeExtractor
+from src.data_preprocessing.optical_flow_keyframes import OpticalFlowKeyframeExtractor
 from src.utils.io import ensure_dir, list_video_files
 
 

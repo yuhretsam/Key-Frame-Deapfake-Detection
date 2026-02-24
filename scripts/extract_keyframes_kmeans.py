@@ -3,7 +3,7 @@ import os
 
 from tqdm import tqdm
 
-from src.data.kmeans_keyframes import KMeansKeyframeExtractor
+from src.data_preprocessing.kmeans_keyframes import KMeansKeyframeExtractor
 from src.utils.io import ensure_dir, list_video_files
 
 

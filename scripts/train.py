@@ -6,7 +6,7 @@ import numpy as np
 import torch
 from torch.utils.data import DataLoader
 
-from src.data.dataset import VideoKeyframeDataset, load_video_paths_and_labels
+from src.data_preprocessing.keyframe_dataset import VideoKeyframeDataset, load_video_paths_and_labels
 from src.models.cnn_lstm import CnnLstm
 from src.training.train import train_model, _run_epoch
 from src.utils.io import ensure_dir
