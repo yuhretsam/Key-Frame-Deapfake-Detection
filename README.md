@@ -29,7 +29,9 @@ trains CNN + LSTM models on the extracted keyframes.
 │   ├── extract_keyframes_kmeans.py
 │   ├── extract_keyframes_optical_flow.py
 │   ├── infer.py
+│   ├── test.py
 │   └── train.py
+├── LICENSE
 ├── requirements.txt
 └── README.md
 ```
@@ -82,10 +84,10 @@ Extract keyframes by clustering frame features (ResNet50) and saving frames
 closest to cluster centers.
 
 ```bash
-python scripts/extract_keyframes_kmeans.py ^
-  --input_root data/videos ^
-  --output_root data ^
-  --method kmeans ^
+python scripts/extract_keyframes_kmeans.py \
+  --input_root data/videos \
+  --output_root data \
+  --method kmeans \
   --min_k 3 --max_k 15
 ```
 
@@ -111,10 +113,10 @@ data/kmeans/
 Extract keyframes using optical flow energy in face regions (MTCNN).
 
 ```bash
-python scripts/extract_keyframes_optical_flow.py ^
-  --input_root data/videos ^
-  --output_root data ^
-  --method opticalflow ^
+python scripts/extract_keyframes_optical_flow.py \
+  --input_root data/videos \
+  --output_root data \
+  --method opticalflow \
   --threshold_ratio 0.3
 ```
 
@@ -141,28 +143,28 @@ Train a CNN + LSTM model on keyframe sequences. Choose a model and a keyframe
 method by name; metrics are printed for train/val/test.
 
 ```bash
-python scripts/train.py ^
-  --data_root data ^
-  --method kmeans ^
-  --class_folders fake real ^
-  --model resnet50 ^
+python scripts/train.py \
+  --data_root data \
+  --method kmeans \
+  --class_folders fake real \
+  --model resnet50 \
   --epochs 30
 ```
 
 Optical Flow example:
 ```bash
-python scripts/train.py ^
-  --data_root data ^
-  --method opticalflow ^
-  --class_folders fake real ^
+python scripts/train.py \
+  --data_root data \
+  --method opticalflow \
+  --class_folders fake real \
   --model efficientnet_b0
 ```
 
 If your keyframes are directly in `data/fake` and `data/real`:
 ```bash
-python scripts/train.py ^
-  --data_root data ^
-  --class_folders fake real ^
+python scripts/train.py \
+  --data_root data \
+  --class_folders fake real \
   --model vgg16
 ```
 
@@ -175,15 +177,76 @@ Common hyperparameters you can tune:
 - `--img_size`
 - `--patience`
 
-## Step 4: Inference (Single Video)
+## Step 4: Cross-dataset Evaluation
+
+Use `scripts/test.py` to evaluate a checkpoint trained on Dataset A against
+all videos in Dataset B. Dataset B is used **100% as a test set**: it is not
+split, and no training or fine-tuning is performed.
+
+Workflow:
+
+```text
+Dataset A
+    ↓
+scripts/train.py
+    ↓
+checkpoint
+    ↓
+scripts/test.py
+    ↓
+100% of Dataset B
+    ↓
+cross-dataset metrics
+```
+
+Unlike a training dataset, the cross-test dataset must not contain
+`train/val/test` directories. Its extracted keyframes must use this layout:
+
+```text
+data/CelebDF/kmeans/
+├── fake/
+│   ├── video001/
+│   │   ├── cluster_0.png
+│   │   └── cluster_1.png
+│   └── ...
+└── real/
+    ├── video100/
+    │   ├── cluster_0.png
+    │   └── cluster_1.png
+    └── ...
+```
+
+For example, to test a checkpoint trained on FF++ against all of CelebDF:
+
+```bash
+python scripts/test.py \
+  --data_root data/CelebDF \
+  --method kmeans \
+  --class_folders fake real \
+  --model resnet50 \
+  --weights output/FFPP/best_resnet50.pth \
+  --batch_size 8 \
+  --output_dir output/crosstest/FFPP_to_CelebDF
+```
+
+For optical-flow keyframes, change `--method` to `opticalflow` and point
+`--data_root` at the dataset directory containing `opticalflow/fake` and
+`opticalflow/real`.
+
+The script prints loss, accuracy, precision, recall, F1, AUC, and EER. It also
+writes `metrics.json` and per-video probabilities to `predictions.csv` inside
+`--output_dir`. The class mapping is identical to training because both scripts
+reuse the same dataset loader (`fake=0`, `real=1` for the default classes).
+
+## Step 5: Inference (Single Video)
 Run inference directly from a video file. The script will extract keyframes
 using the selected method, load weights, and output the predicted label.
 
 ```bash
-python scripts/infer.py ^
-  --video_path path/to/video.mp4 ^
-  --method opticalflow ^
-  --model resnet50 ^
+python scripts/infer.py \
+  --video_path path/to/video.mp4 \
+  --method opticalflow \
+  --model resnet50 \
   --weights checkpoints/best_resnet50.pth
 ```
 
@@ -203,12 +266,5 @@ Use any of these values for `--model`:
   processing.
 
 ## License
-MIT License
 
-Copyright (c) 2026 Nguyễn Hồ Nhật Huy
-
-Permission is hereby granted, free of charge, to any person obtaining a copy of this repository and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+This project is licensed under the [MIT License](LICENSE).

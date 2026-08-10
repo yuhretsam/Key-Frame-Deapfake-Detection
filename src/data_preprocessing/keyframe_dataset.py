@@ -9,6 +9,16 @@ from torch.utils.data import Dataset
 from torchvision import transforms
 
 
+def build_eval_transform():
+    """Return the deterministic transform used for validation and testing."""
+    return transforms.Compose(
+        [
+            transforms.ToTensor(),
+            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+        ]
+    )
+
+
 def load_video_paths_and_labels(
     data_root: str, class_folders: List[str], split_name: str = None
 ):
@@ -43,12 +53,7 @@ class VideoKeyframeDataset(Dataset):
         self.labels = labels
         self.max_seq_length = max_seq_length
         self.img_size = img_size
-        self.transform = transform or transforms.Compose(
-            [
-                transforms.ToTensor(),
-                transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
-            ]
-        )
+        self.transform = transform or build_eval_transform()
 
     def __len__(self) -> int:
         return len(self.video_paths)

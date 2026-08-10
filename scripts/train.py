@@ -1,13 +1,18 @@
 import argparse
 import os
+import sys
 from typing import Tuple
 
 import numpy as np
 import torch
 from torch.utils.data import DataLoader
 
+PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if PROJECT_ROOT not in sys.path:
+    sys.path.insert(0, PROJECT_ROOT)
+
 from src.data_preprocessing.keyframe_dataset import VideoKeyframeDataset, load_video_paths_and_labels
-from src.models.cnn_lstm import CnnLstm
+from src.models.cnn_lstm import build_model
 from src.training.train import train_model, _run_epoch
 from src.utils.io import ensure_dir
 
@@ -101,8 +106,10 @@ def main():
         test_dataset, batch_size=args.batch_size, shuffle=False, num_workers=args.num_workers
     )
 
-    model = CnnLstm(
-        num_classes=len(class_folders), backbone=args.model, freeze_cnn=args.freeze_cnn
+    model = build_model(
+        model_name=args.model,
+        num_classes=len(class_folders),
+        freeze_cnn=args.freeze_cnn,
     ).to(device)
 
     model = train_model(
