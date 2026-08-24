@@ -212,7 +212,6 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--input_dir", required=True, type=Path, help="Folder containing videos")
     parser.add_argument("--output_dir", required=True, type=Path, help="Folder for sample and result text files")
-    parser.add_argument("--weights", required=True, type=Path, help="CNN+LSTM checkpoint (.pth)")
     parser.add_argument("--backbone", required=True, choices=MODEL_NAMES)
     parser.add_argument("--method", required=True, choices=("kmeans", "opticalflow"))
     parser.add_argument("--num_videos", required=True, type=int, help="Number of videos to sample")
@@ -318,12 +317,6 @@ def make_classifier_input(
     return torch.stack(frames).unsqueeze(0)
 
 
-def load_checkpoint(model: torch.nn.Module, weights: Path, device: torch.device) -> None:
-    checkpoint = torch.load(weights, map_location=device)
-    state_dict = checkpoint.get("state_dict", checkpoint) if isinstance(checkpoint, dict) else checkpoint
-    model.load_state_dict(state_dict)
-
-
 def build_keyframe_selector(args: argparse.Namespace, device: torch.device) -> Callable[[Path], List[SelectionImage]]:
     if args.method == "kmeans":
         extractor = BenchmarkKMeansSelector(args.backbone, device)
@@ -370,7 +363,6 @@ def format_result(
             if args.method == "kmeans"
             else "Keyframe embedding backbone: not applicable (optical flow uses MTCNN + Farneback)"
         ),
-        f"Checkpoint: {args.weights.resolve()}",
         f"Device: {device}",
         f"Fixed random seed: {args.seed}",
         f"Selected videos: {args.num_videos}",
@@ -404,7 +396,7 @@ def format_result(
     lines.extend(
         [
             "",
-            "Timing boundary: model/extractor initialization and checkpoint loading are excluded.",
+            "Timing boundary: model/extractor initialization is excluded.",
             "Keyframes are handed to classification in memory; temporary PNG write/read time is excluded.",
             "Classification time includes image preprocessing, host-to-device transfer, CNN embedding, LSTM, and logits.",
         ]
@@ -416,11 +408,8 @@ def main() -> int:
     args = parse_args()
     args.input_dir = args.input_dir.expanduser()
     args.output_dir = args.output_dir.expanduser()
-    args.weights = args.weights.expanduser()
     if not args.input_dir.is_dir():
         raise FileNotFoundError(f"Input directory not found: {args.input_dir}")
-    if not args.weights.is_file():
-        raise FileNotFoundError(f"Checkpoint not found: {args.weights}")
     if args.min_k < 1 or args.max_k < args.min_k:
         raise ValueError("Require 1 <= --min_k <= --max_k")
     if args.frame_step < 1:
@@ -446,7 +435,6 @@ def main() -> int:
         freeze_cnn=True,
         pretrained=False,
     ).to(device)
-    load_checkpoint(classifier, args.weights, device)
     classifier.eval()
 
     rows: List[Dict[str, object]] = []
